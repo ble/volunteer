@@ -13,41 +13,7 @@ func ConfigureHandlers(m volunteer.Manager) Commander {
 	c := Commander{m, make(chan EvaluationRequest)}
 	h.Handle("/command", websocket.Handler(c.wsHandler()))
 	h.HandleFunc("/commandClient", func(w h.ResponseWriter, r *h.Request) {
-		w.Write([]byte(
-			`
-<html><head></head><body>
-<form id="inputForm">
-  <input type="text"></input>
-  <input type="submit"></input>
-</form>
-
-<script>
-  var url = location.toString();
-  var wsUrl = url.replace(/^http/,"ws").replace("Client","")
-  var socket = new WebSocket(wsUrl);
-
-  socket.addEventListener('message', function(e) {
-    window.console.log(e.data);
-    var el = document.createElement("div");
-    el.appendChild(document.createTextNode(e.data));
-    document.body.appendChild(el);
-  });
-
-  var inputForm = document.getElementById('inputForm');
-  inputForm.addEventListener('submit', function(e) {
-    var inputText = e.target.elements[0];
-    window.console.log(e);
-    e.preventDefault();
-    var jsonObj = {'polishNotation': inputText.value};
-    socket.send(JSON.stringify(jsonObj));
-    window.console.log(inputForm);
-      
-  });
-
-</script>
-
-</body></html>
-`))
+		h.ServeFile(w, r, "static/commandClient.html")
 	})
 	return c
 }
