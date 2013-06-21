@@ -24,5 +24,8 @@ func ConfigureWSHandlers(m Manager) {
 			wsHandler.ServeHTTP(w, r)
 		})
 	}
+	h.HandleFunc("/volunteerClient", func(w h.ResponseWriter, r *h.Request) {
+		h.ServeFile(w, r, "static/volunteerClient.html")
+	})
 
 }

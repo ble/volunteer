@@ -6,7 +6,7 @@
 
 <script>
   var url = location.toString();
-  var wsUrl = url.replace(/^http/,"ws").replace("Client","")
+  var wsUrl = "ws://" + window.location.host + "/command";
   var socket = new WebSocket(wsUrl);
 
   socket.addEventListener('message', function(e) {
