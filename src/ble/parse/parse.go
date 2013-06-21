@@ -76,14 +76,15 @@ func parseLeaf(in []byte) (*expr, []byte, error) {
 	return Leaf(leafValue), in[i:], nil
 }
 
+var AllOperations []Operation
 func init() {
 	operationForChar = make(map[byte]Operation)
-	allOperations := []Operation{
+	AllOperations = []Operation{
 		Addition{},
 		Subtraction{},
 		Multiplication{},
 		Division{}}
-	for _, op := range allOperations {
+	for _, op := range AllOperations {
 		operationForChar[byte(op.String()[0])] = op
 	}
 }
