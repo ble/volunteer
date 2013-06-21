@@ -20,14 +20,15 @@ func (c Commander) evaluate(topLevel parse.Expr) volunteer.Response {
 	opWorkers := []volunteer.Worker{nil, nil, nil, nil}
 	var err error
 
+	//define a type so that we can manage our own stack rather than write this
+	//as a recursive function.
 	type stackFrame struct {
 		current, parent *parse.Expr
 		operandIndex    int
 	}
 	stack := []stackFrame{{&topLevel, nil, -1}}
 
-	//return volunteer.Response{0, errors.New("didn't feel like evaluating")}
-	for len(stack) > 0 {
+	for {
 		frame := stack[len(stack)-1]
 		operation := frame.current.Operation
 
@@ -42,16 +43,41 @@ func (c Commander) evaluate(topLevel parse.Expr) volunteer.Response {
 				return volunteer.Response{0, errors.New("Manager.Next: " + err.Error())}
 			}
 		}
+		//hold on to this worker for all operations of this type
 		worker := opWorkers[workerIndex]
 
 		//send the expression to the worker if it has no child subexpressions
 		if frame.current.NoGrandChildren() {
 			value, err := worker.Evaluate(*frame.current)
-			return volunteer.Response{value, err}
+
+			//evaluation failed: we give up on the whole thing
+			if err != nil {
+				return volunteer.Response{0, err}
+			}
+
+			//we just evaluated a sub-expression and need to substitute the reuslt
+			//into the containing expression
+			if frame.parent != nil {
+				frame.parent.Operands[frame.operandIndex] = parse.Leaf(value)
+
+				//pop dat stack
+				stack = stack[:len(stack)-1]
+
+				//are we there yet?
+				if len(stack) == 0 {
+					return volunteer.Response{value, nil}
+				}
+			}
 		} else {
-			//add all the subexpressions
+			//we have 1+ child subexpressions and need to evaluate them first
+			for index, subExpression := range frame.current.Operands {
+
+				//if it's a subexpression, it goes on the stack.
+				if !subExpression.IsLeaf() {
+					stack = append(stack, stackFrame{&subExpression, frame.current, index})
+				}
+			}
 		}
-		return volunteer.Response{0, errors.New("didn't feel like evaluating")}
 	}
 	return volunteer.Response{0, errors.New("didn't feel like evaluating")}
 }
