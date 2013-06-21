@@ -61,6 +61,14 @@ type Status struct {
 	Status  string `json:"status"`
 }
 
+//kind of lame way of doing it; ideally we'd omit the value field when
+//Error != ""
+type Completion struct {
+	Problem string `json:"problem"`
+	Value   int64  `json:"value"`
+	Error   string `json:"error,omitempty"`
+}
+
 func (c Commander) wsHandler() websocket.Handler {
 	return func(conn *websocket.Conn) {
 		println("awaiting commands")
@@ -94,6 +102,12 @@ func (c Commander) wsHandler() websocket.Handler {
 				encoder.Encode(s)
 			}
 			println(parsed.String())
+			response := c.evaluate(*parsed)
+			var eString string
+			if response.Error != nil {
+				eString = response.Error.Error()
+			}
+			encoder.Encode(Completion{s.Problem, response.Value, eString})
 		}
 
 	}

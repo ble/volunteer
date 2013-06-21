@@ -11,28 +11,21 @@ type Operation interface {
 	String() string
 }
 
-type Expr interface {
-	Operator() Operation
-	IsLeaf() bool
-	NoGrandChildren() bool
-	fmt.Stringer
-}
-
-type expr struct {
-	Operands []expr
+type Expr struct {
+	Operands []Expr
 	Operation
 	LeafValue int64
 }
 
-func (e expr) Operator() Operation {
+func (e Expr) Operator() Operation {
 	return e.Operation
 }
 
-func (e expr) IsLeaf() bool {
+func (e Expr) IsLeaf() bool {
 	return e.Operation == nil
 }
 
-func (e expr) NoGrandChildren() bool {
+func (e Expr) NoGrandChildren() bool {
 	for _, child := range e.Operands {
 		if !child.IsLeaf() {
 			return false
@@ -41,7 +34,7 @@ func (e expr) NoGrandChildren() bool {
 	return true
 }
 
-func (e expr) String() string {
+func (e Expr) String() string {
 	if e.IsLeaf() {
 		return fmt.Sprintf("%d", e.LeafValue)
 	}
@@ -54,15 +47,15 @@ func (e expr) String() string {
 	return strings.Join(parts, " ")
 }
 
-func Leaf(x int64) *expr {
-	return &expr{nil, nil, x}
+func Leaf(x int64) Expr {
+	return Expr{nil, nil, x}
 }
 
-func Expression(o Operation, os []expr) *expr {
-	return &expr{os, o, 0}
+func Expression(o Operation, os []Expr) Expr {
+	return Expr{os, o, 0}
 }
 
-func (e expr) MarshalJSON() ([]byte, error) {
+func (e Expr) MarshalJSON() ([]byte, error) {
 	if e.IsLeaf() {
 		return []byte(fmt.Sprintf("%d", e.LeafValue)), nil
 	}

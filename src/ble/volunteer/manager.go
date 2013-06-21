@@ -9,8 +9,8 @@ import (
 
 type Manager interface {
 	volunteer(parse.Operation, Worker)
-	next(parse.Operation) (Worker, error)
-	drop(parse.Operation, Worker)
+	Next(parse.Operation) (Worker, error)
+	Drop(parse.Operation, Worker)
 }
 
 type managerImpl struct {
@@ -39,7 +39,7 @@ func (m *managerImpl) volunteer(o parse.Operation, w Worker) {
 	m.workersByOp[o] = newWorker.Next()
 }
 
-func (m *managerImpl) next(o parse.Operation) (Worker, error) {
+func (m *managerImpl) Next(o parse.Operation) (Worker, error) {
 	m.Lock()
 	defer m.Unlock()
 
@@ -56,7 +56,7 @@ func (m *managerImpl) next(o parse.Operation) (Worker, error) {
 	return worker, nil
 }
 
-func (m *managerImpl) drop(o parse.Operation, w Worker) {
+func (m *managerImpl) Drop(o parse.Operation, w Worker) {
 	m.Lock()
 	defer m.Unlock()
 

@@ -15,14 +15,14 @@ func isDigit(b byte) bool {
 
 var operationForChar map[byte]Operation
 
-func trimWhitespace(in []byte) (*expr, []byte, error) {
+func trimWhitespace(in []byte) (*Expr, []byte, error) {
 	for len(in) > 0 && isSpace(in[0]) {
 		in = in[1:]
 	}
 	return nil, in, nil
 }
 
-func Parse(input []byte) (Expr, error) {
+func Parse(input []byte) (*Expr, error) {
 	result, left, err := parseExpr(input)
 
 	if err != nil {
@@ -35,7 +35,7 @@ func Parse(input []byte) (Expr, error) {
 	return result, nil
 }
 
-func parseExpr(input []byte) (result *expr, left []byte, err error) {
+func parseExpr(input []byte) (result *Expr, left []byte, err error) {
 	_, input, _ = trimWhitespace(input)
 	if input[0] == '(' {
 		return parseOperation(input)
@@ -45,7 +45,7 @@ func parseExpr(input []byte) (result *expr, left []byte, err error) {
 	return nil, input, errors.New("expected a number or an arithmetic expression")
 }
 
-func parseOperation(in []byte) (*expr, []byte, error) {
+func parseOperation(in []byte) (*Expr, []byte, error) {
 	if in[0] != '(' {
 		return nil, in, errors.New("expected opening parenthesis")
 	}
@@ -58,8 +58,8 @@ func parseOperation(in []byte) (*expr, []byte, error) {
 	}
 	in = in[1:]
 
-	var operands []expr = make([]expr, 0, 10)
-	var operand *expr
+	var operands []Expr = make([]Expr, 0, 10)
+	var operand *Expr
 	var err error
 	for len(in) > 0 && in[0] != ')' {
 		operand, in, err = parseExpr(in)
@@ -72,10 +72,11 @@ func parseOperation(in []byte) (*expr, []byte, error) {
 	if len(in) == 0 || in[0] != ')' {
 		return nil, in, errors.New("expected closing parenthesis")
 	}
-	return Expression(operator, operands), in[1:], nil
+	result := Expression(operator, operands)
+	return &result, in[1:], nil
 }
 
-func parseLeaf(in []byte) (*expr, []byte, error) {
+func parseLeaf(in []byte) (*Expr, []byte, error) {
 	var i int
 	for i = 0; i < len(in); i++ {
 		if !isDigit(in[i]) {
@@ -86,7 +87,8 @@ func parseLeaf(in []byte) (*expr, []byte, error) {
 	if err != nil {
 		return nil, in, err
 	}
-	return Leaf(leafValue), in[i:], nil
+	result := Leaf(leafValue)
+	return &result, in[i:], nil
 }
 
 var AllOperations []Operation
@@ -101,4 +103,13 @@ func init() {
 	for _, op := range AllOperations {
 		operationForChar[byte(op.String()[0])] = op
 	}
+}
+
+func OperationIndex(o Operation) int {
+	for i, op := range AllOperations {
+		if op == o {
+			return i
+		}
+	}
+	return -1
 }
