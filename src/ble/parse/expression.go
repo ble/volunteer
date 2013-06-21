@@ -22,6 +22,10 @@ type expr struct {
 	LeafValue int64
 }
 
+func (e expr) Operator() Operation {
+  return e.Operation
+}
+
 func (e expr) IsLeaf() bool {
 	return e.Operation == nil
 }

@@ -22,6 +22,19 @@ func trimWhitespace(in []byte) (*expr, []byte, error) {
 	return nil, in, nil
 }
 
+func Parse(input []byte) (Expr, error) {
+  result, left, err := parseExpr(input)
+
+  if err != nil {
+    return nil, err
+  }
+  if len(left) != 0 {
+    return nil, errors.New("trailing input " + string(left))
+  }
+
+  return result, nil
+}
+
 func parseExpr(input []byte) (result *expr, left []byte, err error) {
 	_, input, _ = trimWhitespace(input)
 	if input[0] == '(' {
