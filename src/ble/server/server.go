@@ -1,31 +1,31 @@
 package server
 
 import (
-  "ble/volunteer"
-  "code.google.com/p/go.net/websocket"
-  "io"
-  "log"
-  "net/http"
+	"ble/volunteer"
+	"code.google.com/p/go.net/websocket"
+	"io"
+	"log"
+	"net/http"
 )
 
 func SetUpServer() volunteer.Manager {
-  m := volunteer.NewManager()
+	m := volunteer.NewManager()
 
-  volunteer.ConfigureWSHandlers(m)
-  http.HandleFunc("/volunteerClient", func(w http.ResponseWriter, r *http.Request) {
-    w.Write([]byte(
-`<html><body>
+	volunteer.ConfigureWSHandlers(m)
+	http.HandleFunc("/volunteerClient", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(
+			`<html><body>
 <script>
 var url = window.location.toString();
 var wsUrl = url.replace(/^http/, "ws").replace("volunteerClient", "volunteer/add");
 var ws = new WebSocket(wsUrl);
 </script>
 </body></html>`))
-  })
-  http.Handle("/echo", websocket.Handler(EchoHandler))
-  http.HandleFunc("/echoClient", func(w http.ResponseWriter, r *http.Request) {
-    w.Write([]byte(
-`<html><body>
+	})
+	http.Handle("/echo", websocket.Handler(EchoHandler))
+	http.HandleFunc("/echoClient", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(
+			`<html><body>
 <script>
 var url = window.location.toString();
 var wsUrl = url.replace(/^http/, "ws").replace("clientPage", "echo");
@@ -51,15 +51,13 @@ ws.addEventListener('close', function(e) {
 });
 </script>
 </body></html>`))
-  })
-  return m
+	})
+	return m
 }
 
 func EchoHandler(conn *websocket.Conn) {
-  _, err := io.Copy(conn, conn)
-  if(err != nil) {
-    log.Println("Echo handler: " + err.Error())
-  }
+	_, err := io.Copy(conn, conn)
+	if err != nil {
+		log.Println("Echo handler: " + err.Error())
+	}
 }
-
-

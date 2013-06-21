@@ -23,16 +23,16 @@ func trimWhitespace(in []byte) (*expr, []byte, error) {
 }
 
 func Parse(input []byte) (Expr, error) {
-  result, left, err := parseExpr(input)
+	result, left, err := parseExpr(input)
 
-  if err != nil {
-    return nil, err
-  }
-  if len(left) != 0 {
-    return nil, errors.New("trailing input " + string(left))
-  }
+	if err != nil {
+		return nil, err
+	}
+	if len(left) != 0 {
+		return nil, errors.New("trailing input " + string(left))
+	}
 
-  return result, nil
+	return result, nil
 }
 
 func parseExpr(input []byte) (result *expr, left []byte, err error) {
@@ -90,6 +90,7 @@ func parseLeaf(in []byte) (*expr, []byte, error) {
 }
 
 var AllOperations []Operation
+
 func init() {
 	operationForChar = make(map[byte]Operation)
 	AllOperations = []Operation{

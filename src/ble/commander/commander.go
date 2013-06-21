@@ -1,16 +1,16 @@
 package commander
 
 import (
-  "ble/volunteer"
-  "ble/parse"
+	"ble/parse"
+	"ble/volunteer"
 )
 
 type EvaluationRequest struct {
-  parse.Expr
-  reply chan volunteer.Response
+	parse.Expr
+	reply chan volunteer.Response
 }
 
 type Commander struct {
-  volunteer.Manager
-  requests chan EvaluationRequest
+	volunteer.Manager
+	requests chan EvaluationRequest
 }

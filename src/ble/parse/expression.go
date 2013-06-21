@@ -3,7 +3,7 @@ package parse
 import (
 	"encoding/json"
 	"fmt"
-  "strings"
+	"strings"
 )
 
 type Operation interface {
@@ -12,10 +12,10 @@ type Operation interface {
 }
 
 type Expr interface {
-  Operator() Operation
-  IsLeaf() bool
-  NoGrandChildren() bool
-  fmt.Stringer
+	Operator() Operation
+	IsLeaf() bool
+	NoGrandChildren() bool
+	fmt.Stringer
 }
 
 type expr struct {
@@ -25,7 +25,7 @@ type expr struct {
 }
 
 func (e expr) Operator() Operation {
-  return e.Operation
+	return e.Operation
 }
 
 func (e expr) IsLeaf() bool {
@@ -33,25 +33,25 @@ func (e expr) IsLeaf() bool {
 }
 
 func (e expr) NoGrandChildren() bool {
-  for _, child := range(e.Operands) {
-    if !child.IsLeaf() {
-      return false
-    }
-  }
-  return true
+	for _, child := range e.Operands {
+		if !child.IsLeaf() {
+			return false
+		}
+	}
+	return true
 }
 
 func (e expr) String() string {
-  if(e.IsLeaf()) {
-    return fmt.Sprintf("%d", e.LeafValue)
-  }
-  parts := make([]string, 0, 2+len(e.Operands))
-  parts = append(parts, "(" + e.Operation.String())
-  for _, operand := range e.Operands {
-    parts = append(parts, operand.String())
-  }
-  parts = append(parts, ")")
-  return strings.Join(parts, " ")
+	if e.IsLeaf() {
+		return fmt.Sprintf("%d", e.LeafValue)
+	}
+	parts := make([]string, 0, 2+len(e.Operands))
+	parts = append(parts, "("+e.Operation.String())
+	for _, operand := range e.Operands {
+		parts = append(parts, operand.String())
+	}
+	parts = append(parts, ")")
+	return strings.Join(parts, " ")
 }
 
 func Leaf(x int64) *expr {
