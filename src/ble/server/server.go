@@ -1,16 +1,17 @@
 package server
 
 import (
+  "ble/volunteer"
   "code.google.com/p/go.net/websocket"
   "io"
   "log"
   "net/http"
 )
 
-func SetUpServer() Manager {
-  m := NewManager()
+func SetUpServer() volunteer.Manager {
+  m := volunteer.NewManager()
 
-  configureWSHandlers(m)
+  volunteer.ConfigureWSHandlers(m)
   http.HandleFunc("/volunteerClient", func(w http.ResponseWriter, r *http.Request) {
     w.Write([]byte(
 `<html><body>

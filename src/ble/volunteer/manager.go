@@ -1,4 +1,4 @@
-package server
+package volunteer
 
 import (
   "ble/parse"

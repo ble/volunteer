@@ -3,6 +3,7 @@ package parse
 import (
 	"encoding/json"
 	"fmt"
+  "strings"
 )
 
 type Operation interface {
@@ -14,6 +15,7 @@ type Expr interface {
   Operator() Operation
   IsLeaf() bool
   NoGrandChildren() bool
+  fmt.Stringer
 }
 
 type expr struct {
@@ -37,6 +39,19 @@ func (e expr) NoGrandChildren() bool {
     }
   }
   return true
+}
+
+func (e expr) String() string {
+  if(e.IsLeaf()) {
+    return fmt.Sprintf("%d", e.LeafValue)
+  }
+  parts := make([]string, 0, 2+len(e.Operands))
+  parts = append(parts, "(" + e.Operation.String())
+  for _, operand := range e.Operands {
+    parts = append(parts, operand.String())
+  }
+  parts = append(parts, ")")
+  return strings.Join(parts, " ")
 }
 
 func Leaf(x int64) *expr {

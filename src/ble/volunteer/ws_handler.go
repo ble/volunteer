@@ -1,11 +1,11 @@
-package server
+package volunteer
 
 import (
   h "net/http"
   . "ble/parse"
 )
 
-func configureWSHandlers(m Manager) {
+func ConfigureWSHandlers(m Manager) {
   done := make(chan Worker)
   table := []struct{path string; Operation} {
     {"/volunteer/add", AllOperations[0]},
