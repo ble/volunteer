@@ -2,15 +2,27 @@ package server
 
 import (
   "code.google.com/p/go.net/websocket"
-  "fmt"
   "io"
   "log"
   "net/http"
 )
 
-func RunServer(portNumber int) {
+func SetUpServer() Manager {
+  m := NewManager()
+
+  configureWSHandlers(m)
+  http.HandleFunc("/volunteerClient", func(w http.ResponseWriter, r *http.Request) {
+    w.Write([]byte(
+`<html><body>
+<script>
+var url = window.location.toString();
+var wsUrl = url.replace(/^http/, "ws").replace("volunteerClient", "volunteer/add");
+var ws = new WebSocket(wsUrl);
+</script>
+</body></html>`))
+  })
   http.Handle("/echo", websocket.Handler(EchoHandler))
-  http.HandleFunc("/clientPage", func(w http.ResponseWriter, r *http.Request) {
+  http.HandleFunc("/echoClient", func(w http.ResponseWriter, r *http.Request) {
     w.Write([]byte(
 `<html><body>
 <script>
@@ -39,8 +51,7 @@ ws.addEventListener('close', function(e) {
 </script>
 </body></html>`))
   })
-  err := http.ListenAndServe(fmt.Sprintf(":%d", portNumber), nil)
-  log.Println(err)
+  return m
 }
 
 func EchoHandler(conn *websocket.Conn) {
