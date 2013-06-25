@@ -4,7 +4,9 @@ import (
 	"ble/parse"
 	"code.google.com/p/go.net/websocket"
 	"encoding/json"
+	"errors"
 	"log"
+	"reflect"
 )
 
 type Worker interface {
@@ -38,7 +40,36 @@ type request struct {
 
 type Response struct {
 	Value int64 `json:"value"`
-	Error error `json:"-"`
+	Error error `json:"error,omitempty"`
+}
+
+func (r *Response) MarshalJSON() ([]byte, error) {
+	substitute := make(map[string]interface{})
+	substitute["value"] = r.Value
+	if r.Error != nil {
+		substitute["error"] = r.Error.Error()
+	}
+	return json.Marshal(substitute)
+}
+
+func (r *Response) UnmarshalJSON(data []byte) error {
+	substitute := make(map[string]interface{})
+	if err := json.Unmarshal(data, substitute); err != nil {
+		return err
+	}
+	if value, present := substitute["value"]; present {
+		//this is monumentally stupid: it will panic if the key "value" has a non-
+		//int value.
+		r.Value = reflect.ValueOf(value).Int()
+	} else {
+		return errors.New("no value present in response")
+	}
+	if errString, present := substitute["error"]; present {
+		r.Error = errors.New(reflect.ValueOf(errString).String())
+	} else {
+		r.Error = nil
+	}
+	return nil
 }
 
 func MakeWorkerHandler(o parse.Operation, done chan<- Worker) (websocket.Handler, Worker) {
