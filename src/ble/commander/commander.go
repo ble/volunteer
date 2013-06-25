@@ -64,15 +64,16 @@ func (c Commander) evaluate(topLevel parse.Expr) volunteer.Response {
 			if frame.parent != nil {
 				frame.parent.Operands[frame.operandIndex] = parse.Leaf(value)
 
-				//pop dat stack
-				stack = stack[:len(stack)-1]
-
-				//are we there yet?
-				if len(stack) == 0 {
-					return volunteer.Response{value, nil}
-				}
 			}
+
+			//pop dat stack
+			stack = stack[:len(stack)-1]
 			println("evaluated!")
+			//are we there yet?
+			if len(stack) == 0 {
+				return volunteer.Response{value, nil}
+			}
+
 		} else {
 			println("pushing onto stack")
 			//we have 1+ child subexpressions and need to evaluate them first
