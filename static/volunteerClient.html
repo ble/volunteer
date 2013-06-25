@@ -44,7 +44,7 @@
 
     if(operator != this.opString) {
       window.console.error("mismatched operator in work request");
-      ws.send({'value': -1, 'error': 'mismatched operator in work request'});
+      ws.send(JSON.stringify({'value': -1, 'error': 'mismatched operator in work request'}));
       ws.close();
     }
 
@@ -54,9 +54,9 @@
     if(typeof result != "number" ||
        !Number.isFinite(result) ||
        Number.isNaN(result)) {
-      ws.send({'value': -1, 'error': 'evaluate failed to produce a number:' + result});
+      ws.send(JSON.stringify({'value': -1, 'error': 'evaluate failed to produce a number:' + result}));
     }
-    ws.send({'value': result});
+    ws.send(JSON.stringify({'value': result}));
   };
 
   OperationWorker.prototype.setUpEventListeners = function(ws) {

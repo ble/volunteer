@@ -2,9 +2,11 @@ package volunteer
 
 import (
 	"ble/parse"
+	"bytes"
 	"code.google.com/p/go.net/websocket"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
 	"reflect"
 )
@@ -54,7 +56,7 @@ func (r *Response) MarshalJSON() ([]byte, error) {
 
 func (r *Response) UnmarshalJSON(data []byte) error {
 	substitute := make(map[string]interface{})
-	if err := json.Unmarshal(data, substitute); err != nil {
+	if err := json.Unmarshal(data, &substitute); err != nil {
 		return err
 	}
 	if value, present := substitute["value"]; present {
@@ -75,10 +77,15 @@ func (r *Response) UnmarshalJSON(data []byte) error {
 func MakeWorkerHandler(o parse.Operation, done chan<- Worker) (websocket.Handler, Worker) {
 	ch := make(chan request)
 	w := &workerImpl{o, nil, ch, done}
+
+	//awkward as hell, for debugging.
+	jsonBytes := make([]byte, 1024, 1024)
+	buffer := bytes.NewBuffer(make([]byte, 0, 1024))
+
 	h := func(conn *websocket.Conn) {
 		defer conn.Close()
 		encoder := json.NewEncoder(conn)
-		decoder := json.NewDecoder(conn)
+		decoder := json.NewDecoder(buffer)
 
 		for {
 			var resp Response
@@ -92,7 +99,11 @@ func MakeWorkerHandler(o parse.Operation, done chan<- Worker) (websocket.Handler
 				break
 			}
 
-			err = decoder.Decode(resp)
+			n, err := conn.Read(jsonBytes)
+			buffer.Write(jsonBytes[0:n])
+			fmt.Printf("read data: '%s'", string(jsonBytes))
+			err = decoder.Decode(&resp)
+			fmt.Printf("worker response: %#v\n", resp)
 			if err != nil {
 				log.Println("receiving json: " + err.Error())
 				resp.Error = err
