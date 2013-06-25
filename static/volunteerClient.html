@@ -78,6 +78,7 @@
     //compatibility and converting arguments into a real array, etc.
     var result = 0;
     for(var i = 0; i < arguments.length; i++) result += arguments[i];
+    return result;
   }],
   ["sub", "-", function() {
     if(arguments.length < 1)

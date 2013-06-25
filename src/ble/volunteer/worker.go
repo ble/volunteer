@@ -60,9 +60,7 @@ func (r *Response) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	if value, present := substitute["value"]; present {
-		//this is monumentally stupid: it will panic if the key "value" has a non-
-		//int value.
-		r.Value = reflect.ValueOf(value).Int()
+		r.Value = int64(value.(float64))
 	} else {
 		return errors.New("no value present in response")
 	}
