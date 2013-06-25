@@ -18,9 +18,12 @@ func ConfigureWSHandlers(m Manager) {
 	}
 
 	for _, tableEntry := range table {
+		//not making a copy === classic mistake in creating closures inside of a
+		//loop.
+		tableEntryCopy := tableEntry
 		h.HandleFunc(tableEntry.path, func(w h.ResponseWriter, r *h.Request) {
 			wsHandler, worker := MakeWorkerHandler(tableEntry.Operation, done)
-			m.volunteer(tableEntry.Operation, worker)
+			m.volunteer(tableEntryCopy.Operation, worker)
 			wsHandler.ServeHTTP(w, r)
 		})
 	}

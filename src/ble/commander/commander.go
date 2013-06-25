@@ -4,6 +4,7 @@ import (
 	"ble/parse"
 	"ble/volunteer"
 	"errors"
+	"fmt"
 )
 
 type EvaluationRequest struct {
@@ -30,6 +31,7 @@ func (c Commander) evaluate(topLevel parse.Expr) volunteer.Response {
 
 	for {
 		frame := stack[len(stack)-1]
+		fmt.Printf("%#v\n", frame)
 		operation := frame.current.Operation
 
 		//ensure that we have a worker for this particular operation
@@ -38,20 +40,22 @@ func (c Commander) evaluate(topLevel parse.Expr) volunteer.Response {
 			return volunteer.Response{0, errors.New("couldn't match operation")}
 		}
 		if opWorkers[workerIndex] == nil {
+			//hold on to this worker for all operations of this type
 			opWorkers[workerIndex], err = c.Manager.Next(operation)
 			if err != nil {
 				return volunteer.Response{0, errors.New("Manager.Next: " + err.Error())}
 			}
 		}
-		//hold on to this worker for all operations of this type
 		worker := opWorkers[workerIndex]
 
 		//send the expression to the worker if it has no child subexpressions
 		if frame.current.NoGrandChildren() {
+			println("sending to volunteer...")
 			value, err := worker.Evaluate(*frame.current)
 
 			//evaluation failed: we give up on the whole thing
 			if err != nil {
+				println("error on worker.Evaluate")
 				return volunteer.Response{0, err}
 			}
 
@@ -68,7 +72,9 @@ func (c Commander) evaluate(topLevel parse.Expr) volunteer.Response {
 					return volunteer.Response{value, nil}
 				}
 			}
+			println("evaluated!")
 		} else {
+			println("pushing onto stack")
 			//we have 1+ child subexpressions and need to evaluate them first
 			for index, subExpression := range frame.current.Operands {
 

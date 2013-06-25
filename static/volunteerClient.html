@@ -1,0 +1,112 @@
+<html><head></head><body>
+<script id="workerDefinition">
+  var OperationWorker = function(urlSuffix, opStr, evaluateFn) {
+    this.urlSuffix = urlSuffix;
+    this.opString = opStr;
+    this.evaluate = evaluateFn;
+    this.url = this.wsUrl();
+    this.ws = null;
+  }
+
+  OperationWorker.prototype.wsUrl = function() {
+    return "ws://" + window.location.host + "/volunteer/" + this.urlSuffix;
+  };
+
+  OperationWorker.prototype.connect = function() {
+    if(this.ws != null && this.ws.readyState != this.ws.CLOSED)
+      return;
+
+    if(this.ws != null) {
+      this.removeEventListeners(this.ws);
+      this.ws = null;
+    }
+
+    this.ws = new WebSocket(this.url);
+
+    this.setUpEventListeners(this.ws);
+  };
+
+  OperationWorker.prototype.processMessage = function(event) {
+    var ws = event.target;
+    var data = event.data;
+    var jso = window.JSON.parse(data);
+
+    window.console.log(event.data);
+    var el = document.createElement("div");
+    el.appendChild(document.createTextNode(event.data));
+    document.body.appendChild(el);
+
+
+    //explicitly using string indexing on objects constructed from JSON is a
+    //habit from working with the Closure Compiler, which minifies / renames
+    //properties accessed with `.property` syntax.
+    var operator = jso['operator'], operands = jso['operands'];
+
+    if(operator != this.opString) {
+      window.console.error("mismatched operator in work request");
+      ws.send({'value': -1, 'error': 'mismatched operator in work request'});
+      ws.close();
+    }
+
+    var result = this.evaluate.apply(this, operands);
+
+    //we should actually handle a few other cases, like "number is not an int"
+    if(typeof result != "number" ||
+       !Number.isFinite(result) ||
+       Number.isNaN(result)) {
+      ws.send({'value': -1, 'error': 'evaluate failed to produce a number:' + result});
+    }
+    ws.send({'value': result});
+  };
+
+  OperationWorker.prototype.setUpEventListeners = function(ws) {
+    this.messageListener = this.processMessage.bind(this);
+    ws.addEventListener('message', this.messageListener);
+  };
+
+  OperationWorker.prototype.removeEventListeners = function(ws) {
+    ws.removeEventListener('message', this.messageListener);
+    this.messageListener = null;
+  };
+</script>
+<script id="setup">
+  var table = [
+  ["add", "+", function() {
+    if(arguments.length < 2)
+      return "need at least two arguments to evaluate addition";
+    //could use Array.reduce, but then I'd have to think about browser
+    //compatibility and converting arguments into a real array, etc.
+    var result = 0;
+    for(var i = 0; i < arguments.length; i++) result += arguments[i];
+  }],
+  ["sub", "-", function() {
+    if(arguments.length < 1)
+      return "need at least one argument to evaluate '-'";
+    var result = arguments[0];
+    if(arguments.length == 1)
+      return -result;
+    for(var i = 1; i < arguments.length; i++) result -= arguments[i];
+    return result;
+  }],
+  ["div", "/", function() {
+    if(arguments.length < 2)
+      return "need at least two numbers to evaluate a division";
+    var result = arguments[0];
+    for(var i = 1; i < arguments.length; i++) result /= arguments[i];
+    return Math.floor(result);
+  }],
+  ["mul", "*", function() {
+    if(arguments.length < 2)
+      return "need at least two numbers to evaluate a multiplication";
+    var result = 1;
+    for(var i = 0; i < arguments.length; i++) result *= arguments[i];
+    return result;
+  }]];
+  var workers = [];
+  for(var i = 0; i < table.length; i++) {
+    workers.push(new OperationWorker(table[i][0], table[i][1], table[i][2]));
+    workers[workers.length-1].connect();
+  }
+</script>
+
+</body></html>
