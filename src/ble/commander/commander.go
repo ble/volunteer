@@ -78,10 +78,12 @@ func (c Commander) evaluate(topLevel parse.Expr) volunteer.Response {
 			println("pushing onto stack")
 			//we have 1+ child subexpressions and need to evaluate them first
 			for index, subExpression := range frame.current.Operands {
-
+				//whoops, need to copy here so that we can take a pointer to the
+				//right thing.
+				copyExpression := subExpression
 				//if it's a subexpression, it goes on the stack.
 				if !subExpression.IsLeaf() {
-					stack = append(stack, stackFrame{&subExpression, frame.current, index})
+					stack = append(stack, stackFrame{&copyExpression, frame.current, index})
 				}
 			}
 		}
